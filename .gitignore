@@ -1,0 +1,76 @@
+# ---------- macOS ----------
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ---------- Xcode ----------
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+build/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+timeline.xctimeline
+playground.xcworkspace
+
+# ---------- Swift Package Manager ----------
+.build/
+.swiftpm/
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+
+# ---------- ML data and artifacts ----------
+# Footage and labels are large and personal. Never commit them.
+ml/data/
+ml/runs/
+ml/checkpoints/
+*.mp4
+*.mov
+*.MOV
+*.pt
+*.pth
+*.onnx
+# Core ML models (.mlpackage) are NOT ignored, because the app bundles them.
+# Track them with Git LFS if they get large.
+
+# ---------- Secrets ----------
+.env
+.env.*
+!.env.example
+
+# ---------- Editors ----------
+.vscode/
+.idea/
+
+# ---------- Claude Code ----------
+# Committed (shared project setup):
+#   CLAUDE.md, .claude/settings.json, .claude/commands/,
+#   .claude/agents/, .claude/skills/
+# Ignored (personal, machine-specific):
+CLAUDE.local.md
+.claude/*
+!.claude/settings.json
+!.claude/commands/
+!.claude/agents/
+!.claude/skills/
+
+# Uncomment if your MCP config holds tokens:
+# .mcp.json
+
+# To ignore ALL Claude files instead, uncomment these:
+CLAUDE.md
+.claude/
