@@ -72,5 +72,5 @@ CLAUDE.local.md
 # .mcp.json
 
 # To ignore ALL Claude files instead, uncomment these:
-# CLAUDE.md
-# .claude/
+CLAUDE.md
+.claude/
