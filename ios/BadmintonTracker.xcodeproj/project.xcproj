@@ -18,6 +18,27 @@
     { "kind": "folder", "path": "BadmintonTracker Watch AppTests", "target-membership": [ "BadmintonTracker Watch AppTests" ] },
     { "kind": "folder", "path": "BadmintonTracker Watch AppUITests", "target-membership": [ "BadmintonTracker Watch AppUITests" ] },
     {
+      "kind": "folder",
+      "path": "BadmintonTrackerWidgets",
+      "target-membership": [
+        "BadmintonTrackerWidgetsExtension",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "BadmintonTrackerWidgetsExtension",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    }, {
+      "kind": "group",
+      "name": "Frameworks",
+      "children": [
+        { "path": "<SDK>/System/Library/Frameworks/WidgetKit.framework", "target-membership": [ "BadmintonTrackerWidgetsExtension/frameworks" ] },
+        { "path": "<SDK>/System/Library/Frameworks/SwiftUI.framework", "target-membership": [ "BadmintonTrackerWidgetsExtension/frameworks" ] },
+      ],
+    }, {
       "kind": "group",
       "name": "Products",
       "children": [
@@ -27,6 +48,7 @@
         { "path": "<PRODUCTS>/BadmintonTracker Watch App.app", "id": "3D32480B3096055E00D18B46", "type": "wrapper.application", "index": false, "target-membership": [ { "build-phase": "BadmintonTracker/copy/Embed Watch Content", "header-preservation": "remove-on-copy" } ] },
         { "path": "<PRODUCTS>/BadmintonTracker Watch AppTests.xctest", "id": "3D32481A3096055F00D18B46", "type": "wrapper.cfbundle", "index": false },
         { "path": "<PRODUCTS>/BadmintonTracker Watch AppUITests.xctest", "id": "3D3248243096055F00D18B46", "type": "wrapper.cfbundle", "index": false },
+        { "path": "<PRODUCTS>/BadmintonTrackerWidgetsExtension.appex", "id": "3D07F36F309621AB00BB616B", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "BadmintonTracker/copy/Embed Foundation Extensions", "header-preservation": "remove-on-copy" } ] },
       ],
     },
   ],
@@ -38,6 +60,7 @@
       "product-type": "application",
       "dependencies": [
         "BadmintonTracker Watch App",
+        "BadmintonTrackerWidgetsExtension",
       ],
       "build-phases": [
         "compile-sources",
@@ -48,6 +71,10 @@
           "name": "Embed Watch Content",
           "bundle-base-path": "build-products-directory",
           "relative-path": "$(CONTENTS_FOLDER_PATH)/Watch",
+        }, {
+          "kind": "copy",
+          "name": "Embed Foundation Extensions",
+          "bundle-base-path": "plugins-directory",
         },
       ],
       "build-settings": {
@@ -59,6 +86,7 @@
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_KEY_CFBundleDisplayName": "BadmintonTracker",
+        "INFOPLIST_KEY_NSSupportsLiveActivities": "YES",
         "INFOPLIST_KEY_UIApplicationSceneManifest_Generation": "YES",
         "INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents": "YES",
         "INFOPLIST_KEY_UILaunchScreen_Generation": "YES",
@@ -255,6 +283,45 @@
         "TEST_TARGET_NAME": "BadmintonTracker Watch App",
         "VALIDATE_PRODUCT[config=Release]": "YES",
         "WATCHOS_DEPLOYMENT_TARGET": "27.2",
+      },
+    }, {
+      "name": "BadmintonTrackerWidgetsExtension",
+      "id": "3D07F36E309621AB00BB616B",
+      "product": "Products/BadmintonTrackerWidgetsExtension.appex",
+      "product-type": "app-extension",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
+        "ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME": "WidgetBackground",
+        "CODE_SIGN_STYLE": "Automatic",
+        "CURRENT_PROJECT_VERSION": "1",
+        "DEVELOPMENT_TEAM": "",
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "BadmintonTrackerWidgets/Info.plist",
+        "INFOPLIST_KEY_CFBundleDisplayName": "BadmintonTrackerWidgets",
+        "INFOPLIST_KEY_NSHumanReadableCopyright": "",
+        "IPHONEOS_DEPLOYMENT_TARGET": "27.2",
+        "LD_RUNPATH_SEARCH_PATHS": [
+          "$(inherited)",
+          "@executable_path/Frameworks",
+          "@executable_path/../../Frameworks",
+        ],
+        "MARKETING_VERSION": "1.0",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.srujanvichare.BadmintonTracker.BadmintonTrackerWidgets",
+        "PRODUCT_NAME": "$(TARGET_NAME)",
+        "SDKROOT": "iphoneos",
+        "SKIP_INSTALL": "YES",
+        "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
+        "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
+        "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2",
+        "VALIDATE_PRODUCT[config=Release]": "YES",
       },
     },
   ],
