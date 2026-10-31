@@ -69,9 +69,9 @@ Priority: **Must** = needed for that phase to be useful. **Should** = core to au
 
 | ID | Requirement | Priority | Phase |
 | --- | --- | --- | --- |
-| FR-01 | Create a match: singles or doubles, player or team names, first server, starting ends. | Must | 1 |
+| FR-01 | Create a match: singles or doubles, player or team names, first server, starting ends. In doubles, also ask for the first server and first receiver before each game. | Must | 1 |
 | FR-02 | Rules engine implementing the scoring rules in 6.1. | Must | 1 |
-| FR-03 | Configurable format: points per game, point cap, games per match. | Must | 1 |
+| FR-03 | Configurable format: points per game, point cap, and games per match (1 or best of 3, default 1). | Must | 1 |
 | FR-04 | Manual scoring on iPhone. | Must | 1 |
 | FR-05 | Manual scoring on Watch. Remains as a fallback in every phase. | Must | 1 |
 | FR-06 | Undo, back to the start of the match. | Must | 1 |
@@ -97,21 +97,29 @@ Priority: **Must** = needed for that phase to be useful. **Should** = core to au
 
 ### 6.1 Scoring rules
 
-Based on the BWF Laws of Badminton. The format values are configurable (FR-03) in case the official scoring format changes.
+Based on the BWF Laws of Badminton, adapted for casual play. The format values are configurable (FR-03) in case the official scoring format changes.
 
 - Rally point scoring. Every rally wins a point.
 - A game is won at 21 points.
 - At 20-all, a side must lead by 2 to win.
 - At 29-all, the next point wins the game (cap of 30).
-- A match is best of 3 games.
-- An interval occurs when the leading side first reaches 11 in each game.
-- An interval occurs between games.
-- Players change ends after each game, and in the third game when the leading side first reaches 11.
+- A match is either 1 game or best of 3 games, chosen when the match is created. New matches default to 1 game.
 - The winner of a game serves first in the next game.
+
+**Reminders.** Intervals and end changes are reminders only. The players can skip them, and scoring carries on either way.
+
+- The interval point is half the points per game, rounded up. That is 11 for a 21-point game, or 8 for a 15-point game. It is worked out from the format, not set on its own.
+- An interval reminder shows when the leading side first reaches the interval point in a game.
+- An interval reminder shows between games.
+- A change of ends reminder shows between games. The app records whether the players changed ends or skipped it.
+- There is no change of ends during a game, in any match length.
 - **Singles:** the server serves from the right service court when their score is even, and from the left when it is odd.
 - **Doubles:** each side has one service turn.
     - If the serving side wins the rally, the same player serves again from the other service court.
     - If the receiving side wins the rally, they gain the serve. Players do not change courts. The player in the service court matching their side's score (right if even, left if odd) serves.
+    - The receiver is always the player in the service court diagonally opposite the server.
+    - Players only change service courts when their side wins a rally on its own serve.
+    - At the start of every game, the side serving first chooses which player serves, and the other side chooses which player receives. The app asks for both before each game.
 
 ## 7. Non-functional requirements
 
