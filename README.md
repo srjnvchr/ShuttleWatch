@@ -32,7 +32,7 @@ The scoring pipeline runs in five stages on the iPhone:
 .
 ├── ios/                         Xcode project
 │   ├── BadmintonTracker/        iPhone app
-│   ├── BadmintonTrackerWatch/   Watch app
+│   ├── BadmintonTracker Watch App/  Watch app
 │   ├── BadmintonTrackerWidgets/ Live Activity extension
 │   └── Packages/
 │       └── ScoringKit/          Rules engine (shared Swift package)
