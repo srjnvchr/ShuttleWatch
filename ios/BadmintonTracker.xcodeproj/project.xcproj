@@ -10,6 +10,12 @@
       "Base",
     ],
   },
+  "packages": [
+    {
+      "kind": "local",
+      "path": "Packages/ScoringKit",
+    },
+  ],
   "files": [
     { "kind": "folder", "path": "BadmintonTracker", "target-membership": [ "BadmintonTracker" ] },
     { "kind": "folder", "path": "BadmintonTrackerTests", "target-membership": [ "BadmintonTrackerTests" ] },
@@ -75,6 +81,12 @@
           "kind": "copy",
           "name": "Embed Foundation Extensions",
           "bundle-base-path": "plugins-directory",
+        },
+      ],
+      "package-product-members": [
+        {
+          "product-name": "ScoringKit",
+          "build-phase": { "build-phase": "frameworks" },
         },
       ],
       "build-settings": {
@@ -186,6 +198,12 @@
         "compile-sources",
         "frameworks",
         "resources",
+      ],
+      "package-product-members": [
+        {
+          "product-name": "ScoringKit",
+          "build-phase": { "build-phase": "frameworks" },
+        },
       ],
       "build-settings": {
         "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
