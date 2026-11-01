@@ -98,6 +98,7 @@
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_KEY_CFBundleDisplayName": "BadmintonTracker",
+        "INFOPLIST_KEY_NSCameraUsageDescription": "Shows the court with the live score. Nothing is recorded.",
         "INFOPLIST_KEY_NSSupportsLiveActivities": "YES",
         "INFOPLIST_KEY_UIApplicationSceneManifest_Generation": "YES",
         "INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents": "YES",
