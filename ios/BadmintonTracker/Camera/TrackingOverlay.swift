@@ -28,14 +28,12 @@ struct TrackingOverlayView: View {
             for player in frame.players {
                 // A flat ellipse, as if lying on the floor. Without court calibration
                 // it cannot follow true perspective yet.
-                let center = mapper.point(player.center)
-                let width = max(player.size * mapper.imageHeight * 0.6, 24)
-                let height = width * 0.3
-                let ring = Path(ellipseIn: CGRect(
-                    x: center.x - width / 2, y: center.y - height / 2, width: width, height: height
+                let ring = Path(ellipseIn: HaloStyle.ring(
+                    center: mapper.point(player.center),
+                    playerHeight: player.size * mapper.imageHeight
                 ))
                 context.fill(ring, with: .color(.cyan.opacity(0.18)))
-                context.stroke(ring, with: .color(.cyan), lineWidth: 3)
+                context.stroke(ring, with: .color(.cyan), lineWidth: 9)
             }
 
             let trail = frame.trail.map(mapper.point)

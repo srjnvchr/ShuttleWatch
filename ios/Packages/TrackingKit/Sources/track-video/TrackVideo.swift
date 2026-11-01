@@ -269,11 +269,10 @@ enum Drawing {
                 CGPoint(x: normalized.x * size.width, y: normalized.y * size.height)
             }
 
-            context.setLineWidth(4)
+            // Video pixels are about 2.5 times finer than iPhone screen points, so lines are wider here.
+            context.setLineWidth(22)
             for mark in result.frame.players {
-                let center = point(mark.center)
-                let ringWidth = max(mark.size * size.height * 0.6, 24)
-                let ring = CGRect(x: center.x - ringWidth / 2, y: center.y - ringWidth * 0.15, width: ringWidth, height: ringWidth * 0.3)
+                let ring = HaloStyle.ring(center: point(mark.center), playerHeight: mark.size * size.height, minimumWidth: 48)
                 context.setStrokeColor(mark.isHeld ? CGColor(red: 1, green: 0.55, blue: 0, alpha: 1) : CGColor(red: 0, green: 0.85, blue: 1, alpha: 1))
                 context.strokeEllipse(in: ring)
             }

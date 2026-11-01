@@ -8,7 +8,8 @@ public struct PlayerTracker: Sendable {
     // Distances are fractions of the image. `size` is a player's height in the image.
 
     /// Ankles sit above the floor. The halo moves down by this share of the player's height.
-    static let ankleToFloor: CGFloat = 0.04
+    /// A little more than the true ankle height, so the ring reads as lying under the feet.
+    static let ankleToFloor: CGFloat = 0.07
     /// A sighting this close to where a player was heading counts as the same player,
     /// as a share of their height. Near players are bigger, so they may move further.
     static let matchShareOfSize: CGFloat = 0.8
