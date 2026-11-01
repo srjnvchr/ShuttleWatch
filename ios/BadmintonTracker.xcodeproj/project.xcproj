@@ -17,7 +17,21 @@
     },
   ],
   "files": [
-    { "kind": "folder", "path": "BadmintonTracker", "target-membership": [ "BadmintonTracker" ] },
+    {
+      "kind": "folder",
+      "path": "BadmintonTracker",
+      "target-membership": [
+        "BadmintonTracker",
+      ],
+      "membership-exceptions": [
+        {
+          "target": "BadmintonTracker",
+          "exclusions": [
+            "Info.plist",
+          ],
+        },
+      ],
+    },
     { "kind": "folder", "path": "BadmintonTrackerTests", "target-membership": [ "BadmintonTrackerTests" ] },
     { "kind": "folder", "path": "BadmintonTrackerUITests", "target-membership": [ "BadmintonTrackerUITests" ] },
     { "kind": "folder", "path": "BadmintonTracker Watch App", "target-membership": [ "BadmintonTracker Watch App" ] },
@@ -101,7 +115,9 @@
         "DEVELOPMENT_TEAM": "QLHXRDPY4V",
         "ENABLE_PREVIEWS": "YES",
         "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "BadmintonTracker/Info.plist",
         "INFOPLIST_KEY_CFBundleDisplayName": "BadmintonTracker",
+        "INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace": "YES",
         "INFOPLIST_KEY_NSCameraUsageDescription": "Shows the court with the live score. Nothing is recorded.",
         "INFOPLIST_KEY_NSSupportsLiveActivities": "YES",
         "INFOPLIST_KEY_UIApplicationSceneManifest_Generation": "YES",
