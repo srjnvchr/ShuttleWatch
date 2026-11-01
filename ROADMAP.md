@@ -63,6 +63,17 @@ Questions 1 and 2 are very achievable. Question 3 is achievable once the court i
 4. **Rally state machine.** See section 8.
 5. **Rules engine.** `ScoringKit`, see section 6.1.
 
+### Tracking overlay
+
+A visual layer drawn on top of video, so tracking can be checked by eye. Used offline in Phase 0 (FR-26), live in Phase 3 (FR-27), and on replays in Phase 5 (FR-28).
+
+- **Shuttle:** a circle around the shuttle, plus a short trail of its last few positions (about 8 to 10 frames, roughly 0.15 seconds at 60 fps).
+- **Players:** a halo drawn flat on the floor under each player. Its center is the midpoint between the two ankles from body pose.
+    - With court calibration, the center is mapped to court coordinates, a circle of fixed real size (for example 0.5 m across) is drawn there, and it is mapped back to the image. The halo then follows the court's perspective.
+    - Without calibration (Phase 0), a flattened ellipse is used instead.
+    - When a player jumps, the halo stays on the floor at the last position where the feet were on the ground, until the player lands.
+    - If one ankle is hidden, use the visible one. If both are hidden, keep the last known position for a few frames instead of flickering.
+
 ## 6. Functional requirements
 
 Priority: **Must** = needed for that phase to be useful. **Should** = core to automation. **Could** = later.
@@ -94,6 +105,9 @@ Priority: **Must** = needed for that phase to be useful. **Should** = core to au
 | FR-23 | Shot placement heatmap. | Could | 5 |
 | FR-24 | Home screen widget showing the last match. | Could | 5 |
 | FR-25 | Spectator score sharing (needs a server). | Could | 5 |
+| FR-26 | Write a video with the tracking overlay drawn on recorded footage, to check tracking quality by eye. | Should | 0 |
+| FR-27 | Optional live tracking overlay on the camera preview, for setup and debugging. | Should | 3 |
+| FR-28 | Tracking overlay on replays and highlight clips. | Could | 5 |
 
 ### 6.1 Scoring rules
 
@@ -156,6 +170,8 @@ The exit criteria numbers below are proposed starting targets. Revisit them afte
 - Record 3 or 4 sessions from the tripod position.
 - Hand-label a few hundred rallies: start time, end time, winner.
 - Run an open-source TrackNet model on the footage in Python.
+- Run a player pose model on the same footage. Choosing a pose library is a new dependency, so ask first.
+- Write overlay videos (FR-26) to check shuttle and player tracking by eye.
 - Learn Swift basics in parallel.
 
 **Exit:** the shuttle is found in at least 80% of in-rally frames, and rally start and end are found within 1 second on at least 90% of labelled rallies.
@@ -186,6 +202,7 @@ The exit criteria numbers below are proposed starting targets. Revisit them afte
 - Court calibration and court mask.
 - Live rally start and end detection.
 - The Watch asks who won at the end of each rally.
+- Optional live tracking overlay on the camera preview (FR-27).
 
 **Exit:** a full match runs live without thermal throttling, and the Watch prompt arrives within 2 seconds of each rally ending.
 
