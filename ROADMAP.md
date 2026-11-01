@@ -128,6 +128,12 @@ Based on the BWF Laws of Badminton, adapted for casual play. The format values a
 - An interval reminder shows between games.
 - A change of ends reminder shows between games. The app records whether the players changed ends or skipped it.
 - There is no change of ends during a game, in any match length.
+
+**Ending early.** The players can end a match before a side has won it. It then counts as a complete match.
+
+- The leader wins: the side with more games won, or if games are level, the side ahead in the current game.
+- If both are level (including 0-0), the players choose the winner.
+- Undo reopens the match.
 - **Singles:** the server serves from the right service court when their score is even, and from the left when it is odd.
 - **Doubles:** each side has one service turn.
     - If the serving side wins the rally, the same player serves again from the other service court.

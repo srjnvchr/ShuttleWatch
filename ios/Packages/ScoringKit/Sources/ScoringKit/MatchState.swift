@@ -30,6 +30,8 @@ public struct MatchState: Hashable, Sendable {
     public private(set) var rightCourtSlot = PerSide(a: Player.Slot.first, b: .first)
     /// The side at the end nearest the camera.
     public private(set) var sideAtNearEnd: Side
+    /// True when the players stopped the match before a side won it.
+    public private(set) var endedEarly = false
     /// True only right after the rally where the leader first reached the interval point.
     private var lastRallyReachedInterval = false
     /// Whether a change of ends was already recorded in the current break between games.
@@ -67,12 +69,25 @@ public struct MatchState: Hashable, Sendable {
         return won
     }
 
-    /// The game being played, counting from 1. After the match ends, the last game.
+    /// The game being played, counting from 1. After the match ends, the last game played.
     public var gameNumber: Int {
-        if case .matchOver = status {
-            return completedGames.count
+        guard case .matchOver = status else { return completedGames.count + 1 }
+        // Ending early mid-game leaves that game unfinished, but it still counts as played.
+        let unfinishedGame = endedEarly && (score != PerSide(a: 0, b: 0) || completedGames.isEmpty)
+        return completedGames.count + (unfinishedGame ? 1 : 0)
+    }
+
+    /// The side ahead: more games won, or if games are level, more points in the current game.
+    /// Nil when both are level.
+    public var leader: Side? {
+        let games = gamesWon
+        if games.a != games.b {
+            return games.a > games.b ? .a : .b
         }
-        return completedGames.count + 1
+        if score.a != score.b {
+            return score.a > score.b ? .a : .b
+        }
+        return nil
     }
 
     public var winner: Side? {
@@ -116,7 +131,17 @@ public struct MatchState: Hashable, Sendable {
             try applyGameStart(server: server, receiver: receiver)
         case .changeOfEnds(let taken):
             try applyChangeOfEnds(taken: taken)
+        case .matchEndedEarly(let winner):
+            try applyEarlyEnd(winner: winner)
         }
+    }
+
+    private mutating func applyEarlyEnd(winner: Side) throws(ScoringError) {
+        if self.winner != nil { throw .matchIsOver }
+        if let leader, leader != winner { throw .winnerMustBeLeader }
+        status = .matchOver(winner: winner)
+        endedEarly = true
+        lastRallyReachedInterval = false
     }
 
     private mutating func applyChangeOfEnds(taken: Bool) throws(ScoringError) {
