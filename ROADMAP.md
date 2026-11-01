@@ -65,7 +65,7 @@ Questions 1 and 2 are very achievable. Question 3 is achievable once the court i
 
 ### Tracking overlay
 
-A visual layer drawn on top of video, so tracking can be checked by eye. Used offline in Phase 0 (FR-26), live in Phase 3 (FR-27), and on replays in Phase 5 (FR-28).
+A visual layer drawn on top of video, so tracking can be checked by eye. Used offline in Phase 0 (FR-26), live from Phase 1 as a first visual version and fully in Phase 3 (FR-27), and on replays in Phase 5 (FR-28).
 
 - **Shuttle:** a circle around the shuttle, plus a short trail of its last few positions (about 8 to 10 frames, roughly 0.15 seconds at 60 fps).
 - **Players:** a halo drawn flat on the floor under each player. Its center is the midpoint between the two ankles from body pose.
@@ -90,8 +90,8 @@ Priority: **Must** = needed for that phase to be useful. **Should** = core to au
 | FR-08 | Live Activity showing score, games, and server. | Must | 1 |
 | FR-09 | Match history with a per-rally log. | Must | 1 |
 | FR-10 | Workout session on the Watch for heart rate and calories. | Should | 1 |
-| FR-11 | Record 60 fps video during a match, with each rally's timestamps from manual scoring. | Should | 2 |
-| FR-12 | Export a match's video and rally labels for the ML pipeline. | Should | 2 |
+| FR-11 | Record 1080p video at 60 fps during a match, started and stopped by hand, with each rally's timestamps from manual scoring. Video only, no sound. An optional rally start marking mode adds a Serve tap so each rally has a start time too. Pulled forward so play sessions collect Phase 0 data. | Should | 1 |
+| FR-12 | Export a match's video and rally labels for the ML pipeline, by copying them from the iPhone in Finder. | Should | 1 |
 | FR-13 | Court calibration by tapping four corners. | Should | 2 |
 | FR-14 | Mask everything outside my court. | Should | 3 |
 | FR-15 | Live rally start and end detection. | Should | 3 |
@@ -106,7 +106,7 @@ Priority: **Must** = needed for that phase to be useful. **Should** = core to au
 | FR-24 | Home screen widget showing the last match. | Could | 5 |
 | FR-25 | Spectator score sharing (needs a server). | Could | 5 |
 | FR-26 | Write a video with the tracking overlay drawn on recorded footage, to check tracking quality by eye. | Should | 0 |
-| FR-27 | Optional live tracking overlay on the camera preview, for setup and debugging. | Should | 3 |
+| FR-27 | Optional live tracking overlay on the camera preview, for setup and debugging. Visual only, never drawn into recordings. A first version in Phase 1 uses Vision body pose for player halos and Apple's trajectory detection as a shuttle trial. Phase 3 replaces the shuttle part with the trained model. | Should | 1, 3 |
 | FR-28 | Tracking overlay on replays and highlight clips. | Could | 5 |
 | FR-29 | Camera view: a button on the scoring screen switches to the live back camera preview with each side's score on top, and a button there switches back. View only, nothing is recorded. Follows the phone's orientation. | Should | 1 |
 
@@ -175,7 +175,7 @@ The exit criteria numbers below are proposed starting targets. Revisit them afte
 ### Phase 0: Feasibility spike (no app)
 
 - Record 3 or 4 sessions from the tripod position.
-- Hand-label a few hundred rallies: start time, end time, winner.
+- Label a few hundred rallies: start time, end time, winner. The app's recording and rally start marking (FR-11) produce these labels while scoring.
 - Run an open-source TrackNet model on the footage in Python.
 - Run a player pose model on the same footage. Choosing a pose library is a new dependency, so ask first.
 - Write overlay videos (FR-26) to check shuttle and player tracking by eye.
@@ -183,7 +183,7 @@ The exit criteria numbers below are proposed starting targets. Revisit them afte
 
 **Exit:** the shuttle is found in at least 80% of in-rally frames, and rally start and end are found within 1 second on at least 90% of labelled rallies.
 
-**If it fails:** keep Watch-based scoring and test cheaper rally signals, such as hit sounds or player pose, before dropping automation.
+**If it fails:** keep Watch-based scoring and test cheaper rally signals, such as player pose, before dropping automation. Hit sounds are unlikely to help in a hall with 10 or more courts.
 
 ### Phase 1: Manual scoring app
 
@@ -197,7 +197,7 @@ The exit criteria numbers below are proposed starting targets. Revisit them afte
 
 ### Phase 2: Record now, analyse later
 
-- The app records video while I score manually.
+- The app records video while I score manually (built early, in Phase 1).
 - Export video and labels to `ml/data/`.
 - A Python pipeline detects rallies offline and measures accuracy against manual labels.
 - Fine-tune the shuttle model on my own footage and venue.
@@ -234,6 +234,8 @@ Picked from the Could items in section 6, in order of what I actually use.
 | Heat and battery drain from 60 fps inference | Power bank, reduced inference resolution, profile with Instruments. |
 | Close line calls are unreliable | Watch confirm (FR-16). |
 | Doubles adds occlusion and harder hitter detection | Expect more Watch prompts in doubles. |
+| Hit sounds from 10 or more neighbouring courts | Do not use sound. Record video only. |
+| Recordings fill the iPhone (about 6 GB per hour at 1080p60) | Recording is manual and optional. Delete footage after export. |
 | New to Swift | Start with `ScoringKit`, which is pure logic and easy to test. |
 
 ## 11. Tech stack
