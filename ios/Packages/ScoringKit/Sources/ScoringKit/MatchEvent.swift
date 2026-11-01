@@ -5,6 +5,8 @@ public enum MatchEvent: Hashable, Sendable, Codable {
     case rallyWon(by: Side)
     /// Doubles only: who serves and who receives the first rally of a game.
     case gameStarted(server: Player, receiver: Player)
+    /// Between games: whether the players changed ends (`true`) or skipped it (`false`).
+    case changeOfEnds(taken: Bool)
 }
 
 public enum ScoringError: Error, Equatable {
@@ -18,4 +20,6 @@ public enum ScoringError: Error, Equatable {
     case wrongServingSide
     /// The receiver must be on the other side from the server.
     case receiverOnServingSide
+    /// Ends can only change between games, once per break. Never during a game.
+    case changeOfEndsNotAllowed
 }

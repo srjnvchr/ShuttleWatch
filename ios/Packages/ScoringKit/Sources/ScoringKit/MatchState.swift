@@ -12,6 +12,12 @@ public struct MatchState: Hashable, Sendable {
         public let winner: Side
     }
 
+    /// Prompts for the players. They are reminders only: skipping one never blocks scoring.
+    public enum Reminder: Hashable, Sendable {
+        case interval
+        case changeEnds
+    }
+
     public let setup: MatchSetup
     /// The current game's score. After the match ends, the final game's score.
     public private(set) var score = PerSide(a: 0, b: 0)
@@ -22,11 +28,33 @@ public struct MatchState: Hashable, Sendable {
     public private(set) var rallyCount = 0
     /// Doubles: which player of each side stands in their right service court.
     public private(set) var rightCourtSlot = PerSide(a: Player.Slot.first, b: .first)
+    /// The side at the end nearest the camera.
+    public private(set) var sideAtNearEnd: Side
+    /// True only right after the rally where the leader first reached the interval point.
+    private var lastRallyReachedInterval = false
+    /// Whether a change of ends was already recorded in the current break between games.
+    private var endsDecidedThisBreak = false
 
     public init(setup: MatchSetup) {
         self.setup = setup
         servingSide = setup.firstServingSide
+        sideAtNearEnd = setup.sideAtNearEnd
         status = setup.kind == .doubles ? .awaitingGameSetup : .inPlay
+    }
+
+    /// Between two games of the same match, before the next game's first rally.
+    public var isBetweenGames: Bool {
+        guard !completedGames.isEmpty, winner == nil else { return false }
+        return score == PerSide(a: 0, b: 0)
+    }
+
+    /// What the app should remind the players about right now.
+    public var reminders: Set<Reminder> {
+        if lastRallyReachedInterval {
+            return [.interval]
+        }
+        guard isBetweenGames else { return [] }
+        return endsDecidedThisBreak ? [.interval] : [.interval, .changeEnds]
     }
 
     public var format: MatchFormat { setup.format }
@@ -86,7 +114,18 @@ public struct MatchState: Hashable, Sendable {
             try applyRally(wonBy: side)
         case .gameStarted(let server, let receiver):
             try applyGameStart(server: server, receiver: receiver)
+        case .changeOfEnds(let taken):
+            try applyChangeOfEnds(taken: taken)
         }
+    }
+
+    private mutating func applyChangeOfEnds(taken: Bool) throws(ScoringError) {
+        if winner != nil { throw .matchIsOver }
+        guard isBetweenGames, !endsDecidedThisBreak else { throw .changeOfEndsNotAllowed }
+        if taken {
+            sideAtNearEnd = sideAtNearEnd.opponent
+        }
+        endsDecidedThisBreak = true
     }
 
     private mutating func applyGameStart(server: Player, receiver: Player) throws(ScoringError) {
@@ -121,7 +160,15 @@ public struct MatchState: Hashable, Sendable {
         // Rally point scoring: whoever wins the rally serves the next one.
         servingSide = side
 
-        guard let gameWinner = format.gameWinner(of: score) else { return }
+        guard let gameWinner = format.gameWinner(of: score) else {
+            // Scores rise one at a time, so the leader first reaches the interval point
+            // exactly when the rally winner hits it while the other side is still below.
+            lastRallyReachedInterval = score[side] == format.intervalPoint
+                && score[side.opponent] < format.intervalPoint
+            return
+        }
+        lastRallyReachedInterval = false
+        endsDecidedThisBreak = false
         completedGames.append(GameResult(score: score, winner: gameWinner))
 
         if gamesWon[gameWinner] >= format.gamesToWin {
