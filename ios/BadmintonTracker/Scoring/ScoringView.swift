@@ -19,11 +19,28 @@ struct ScoringView: View {
         .sheet(isPresented: Binding(get: { model.needsGameSetup }, set: { _ in })) {
             GameSetupSheet(model: model, onEndMatch: onEndMatch)
         }
-        .confirmationDialog("End this match?", isPresented: $confirmingEnd, titleVisibility: .visible) {
-            Button("End match", role: .destructive, action: onEndMatch)
+        .confirmationDialog(endTitle, isPresented: $confirmingEnd, titleVisibility: .visible) {
+            if let leader = model.state.leader {
+                Button("End match", role: .destructive) { model.endMatchEarly(winner: leader) }
+            } else {
+                ForEach(Side.allCases, id: \.self) { side in
+                    Button("\(model.name(of: side)) won") { model.endMatchEarly(winner: side) }
+                }
+            }
         } message: {
-            Text("The score is not saved yet.")
+            Text(endMessage)
         }
+    }
+
+    private var endTitle: String {
+        model.state.leader == nil ? "It's level. Who won?" : "End the match now?"
+    }
+
+    private var endMessage: String {
+        guard let leader = model.state.leader else {
+            return "The match is saved as complete with the winner you pick."
+        }
+        return "\(model.name(of: leader)) lead, so they win. The match is saved as complete."
     }
 
     private var scoring: some View {
@@ -34,8 +51,8 @@ struct ScoringView: View {
         }
         .sensoryFeedback(.impact, trigger: model.state.rallyCount)
         .overlay {
-            if let winner = model.state.winner {
-                matchOver(winner: winner)
+            if let result = model.resultTitle {
+                matchOver(result: result)
             }
         }
     }
@@ -112,12 +129,12 @@ struct ScoringView: View {
         .padding(.vertical, 10)
     }
 
-    private func matchOver(winner: Side) -> some View {
+    private func matchOver(result: String) -> some View {
         VStack(spacing: 16) {
             Image(systemName: "trophy.fill")
                 .font(.system(size: 56))
                 .foregroundStyle(.yellow)
-            Text("\(model.name(of: winner)) win")
+            Text(result)
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
             Text(model.completedGamesSummary)

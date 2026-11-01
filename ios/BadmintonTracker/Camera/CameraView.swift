@@ -67,10 +67,7 @@ struct CameraView: View {
     }
 
     private var statusLine: String {
-        if let winner = model.state.winner {
-            return "\(model.name(of: winner)) win"
-        }
-        return model.gameLabel
+        model.resultTitle ?? model.gameLabel
     }
 
     private func sideScore(_ side: Side) -> some View {
