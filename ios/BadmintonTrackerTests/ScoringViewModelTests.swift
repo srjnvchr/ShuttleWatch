@@ -13,8 +13,8 @@ struct ScoringViewModelTests {
         var form = MatchSetupForm()
         form.kind = .singles
         form.gamesPerMatch = games
-        form.names[.singles(.a)] = "Priya"
-        form.names[.singles(.b)] = "Sam"
+        form.nameText[.singles(.a)] = "Priya"
+        form.nameText[.singles(.b)] = "Sam"
         return try #require(form.makeViewModel())
     }
 
@@ -139,5 +139,21 @@ struct MatchSetupFormTests {
         form.pointCap = 20
         #expect(!form.canStart)
         #expect(form.makeViewModel() == nil)
+    }
+
+    @Test func namesKeepTypedSpacesUntilTheMatchStarts() {
+        var form = MatchSetupForm()
+        form.kind = .singles
+        form.nameText[.singles(.a)] = "Ana "
+        #expect(form.nameText[.singles(.a)] == "Ana ")
+        form.nameText[.singles(.a)] = "Ana Maria "
+        #expect(form.names.name(of: .singles(.a), kind: .singles) == "Ana Maria")
+    }
+
+    @Test func switchingToSinglesDropsTheSecondPlayers() {
+        var form = MatchSetupForm()
+        form.nameText[Player(side: .a, slot: .second)] = "Ana"
+        form.kind = .singles
+        #expect(form.names[Player(side: .a, slot: .second)] == nil)
     }
 }

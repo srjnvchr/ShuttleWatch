@@ -3,7 +3,8 @@ import ScoringKit
 /// The choices on the match setup screen (FR-01), kept apart from the view so they can be tested.
 struct MatchSetupForm: Hashable {
     var kind: MatchKind = .doubles
-    var names = PlayerNames()
+    /// Names as typed. Trimmed only when the match starts, so spaces can be typed mid-name.
+    var nameText: [Player: String] = [:]
     /// 1 game or best of 3. New matches default to 1 game.
     var gamesPerMatch = MatchFormat.standard.gamesPerMatch
     var pointsPerGame = MatchFormat.standard.pointsPerGame
@@ -17,6 +18,10 @@ struct MatchSetupForm: Hashable {
     var players: [Player] {
         let slots: [Player.Slot] = kind == .singles ? [.first] : [.first, .second]
         return Side.allCases.flatMap { side in slots.map { Player(side: side, slot: $0) } }
+    }
+
+    var names: PlayerNames {
+        PlayerNames(nameText.filter { players.contains($0.key) })
     }
 
     var format: MatchFormat? {

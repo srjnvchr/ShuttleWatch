@@ -1,21 +1,15 @@
-//
-//  ContentView.swift
-//  BadmintonTracker
-//
-//  Created by Manjiri Sane on 31/10/2026.
-//
-
 import SwiftUI
 
+/// Shows match setup until a match starts, then the scoring screen.
 struct ContentView: View {
+    @State private var scoring: ScoringViewModel?
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        if let scoring {
+            ScoringView(model: scoring) { self.scoring = nil }
+        } else {
+            MatchSetupView { scoring = $0 }
         }
-        .padding()
     }
 }
 
