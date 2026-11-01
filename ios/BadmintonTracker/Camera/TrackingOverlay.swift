@@ -1,5 +1,6 @@
 import Observation
 import SwiftUI
+import TrackingKit
 
 /// The latest tracking result, for drawing on the camera view.
 @Observable

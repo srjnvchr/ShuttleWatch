@@ -14,6 +14,9 @@
     {
       "kind": "local",
       "path": "Packages/ScoringKit",
+    }, {
+      "kind": "local",
+      "path": "Packages/TrackingKit",
     },
   ],
   "files": [
@@ -100,6 +103,9 @@
       "package-product-members": [
         {
           "product-name": "ScoringKit",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "product-name": "TrackingKit",
           "build-phase": { "build-phase": "frameworks" },
         }, {
           "package": "ScoringKit",

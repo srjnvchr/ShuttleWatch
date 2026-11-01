@@ -72,11 +72,9 @@ struct RecordingLabelTests {
         #expect(model.labels.rallyStarts[0] == start)
     }
 
-    @Test func folderNameUsesTheMatchTitleAndDate() {
-        let date = ISO8601DateFormatter().date(from: "2026-11-01T14:30:00Z")!
-        let name = MatchLabels.folderName(title: "Priya vs Sam/Ana", startedAt: date)
-        #expect(name.hasPrefix("2026-11-01 "))
-        #expect(name.hasSuffix(" Priya vs Sam-Ana"))
+    @Test func folderNameUsesLocal24HourTime() throws {
+        let date = try #require(Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 17, minute: 5)))
+        #expect(MatchLabels.folderName(title: "Priya vs Sam/Ana", startedAt: date) == "2026-11-01 1705 Priya vs Sam-Ana")
     }
 
     @Test func labelsPlaceRalliesOnTheVideoTimeline() {

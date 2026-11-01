@@ -170,7 +170,7 @@ final class CaptureController {
             return false
         }
         applyCaptureRotation()
-        let url = folder.appending(path: "video-\(Self.fileStamp()).mov")
+        let url = folder.appending(path: "video \(MatchLabels.localStamp(.now, timeSeparator: "", seconds: true)).mov")
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             recordingStartedAt = try await processor.startRecording(to: url)
@@ -195,10 +195,5 @@ final class CaptureController {
         await release()
         guard let savedURL else { return nil }
         return RecordingSegment(fileName: savedURL.lastPathComponent, startedAt: startedAt, endedAt: .now)
-    }
-
-    private static func fileStamp() -> String {
-        Date.now.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false))
-            .replacingOccurrences(of: ":", with: "")
     }
 }

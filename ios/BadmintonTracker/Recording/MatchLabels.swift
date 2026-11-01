@@ -24,12 +24,20 @@ nonisolated struct MatchLabels: Hashable, Codable {
         self.marksRallyStarts = marksRallyStarts
     }
 
+    /// Local date and 24-hour time, so folders sort in order: "2026-11-01 1715 Priya vs Sam".
     static func folderName(title: String, startedAt: Date) -> String {
-        let stamp = startedAt.formatted(.iso8601.year().month().day().dateSeparator(.dash))
-        let time = startedAt.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits))
-            .replacingOccurrences(of: ":", with: "")
         let safeTitle = title.components(separatedBy: CharacterSet(charactersIn: "/\\:")).joined(separator: "-")
-        return "\(stamp) \(time) \(safeTitle)"
+        return "\(localStamp(startedAt, timeSeparator: "")) \(safeTitle)"
+    }
+
+    /// For example "2026-11-01 1715", or "2026-11-01 171542" with seconds.
+    static func localStamp(_ date: Date, timeSeparator: String, seconds: Bool = false) -> String {
+        let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+        var text = String(format: "%04d-%02d-%02d %02d%@%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0, parts.hour ?? 0, timeSeparator, parts.minute ?? 0)
+        if seconds {
+            text += String(format: "%@%02d", timeSeparator, parts.second ?? 0)
+        }
+        return text
     }
 }
 
