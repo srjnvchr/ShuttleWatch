@@ -92,8 +92,8 @@ Priority: **Must** = needed for that phase to be useful. **Should** = core to au
 | FR-10 | Workout session on the Watch for heart rate and calories. | Should | 1 |
 | FR-11 | Record 1080p video at 60 fps during a match, started and stopped by hand, with each rally's timestamps from manual scoring. Video only, no sound. An optional rally start marking mode adds a Serve tap so each rally has a start time too. Pulled forward so play sessions collect Phase 0 data. | Should | 1 |
 | FR-12 | Export a match's video and rally labels for the ML pipeline, by copying them from the iPhone in Finder. | Should | 1 |
-| FR-13 | Court calibration by tapping four corners. | Should | 2 |
-| FR-14 | Mask everything outside my court. | Should | 3 |
+| FR-13 | Court calibration by dragging four handles onto the court corners, with doubles, singles, or a custom size (for testing on any rectangle). Saved between launches and stored with each recording. Gives true floor circles for halos. | Should | 1 |
+| FR-14 | Mask everything outside my court. First version: halos only for players within 1.5 m of the calibrated court. | Should | 1, 3 |
 | FR-15 | Live rally start and end detection. | Should | 3 |
 | FR-16 | Watch prompt at rally end to confirm the winner. | Should | 3 |
 | FR-17 | Track which player or team is on which end, across changes of ends. | Should | 3 |

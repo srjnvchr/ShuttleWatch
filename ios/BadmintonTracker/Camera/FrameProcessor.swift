@@ -1,5 +1,6 @@
 import AVFoundation
 import CoreMedia
+import TrackingKit
 
 /// Receives every camera frame on the capture queue. It writes frames to the recording,
 /// and hands some frames to the tracker. Both jobs run off the main thread.
@@ -34,6 +35,10 @@ actor FrameProcessor {
         if !enabled {
             Task { await tracker.reset() }
         }
+    }
+
+    func setCalibration(_ calibration: CourtCalibration?) {
+        Task { await tracker.setCalibration(calibration) }
     }
 
     /// Asks for recording to begin with the next frame. Returns the wall-clock time of that

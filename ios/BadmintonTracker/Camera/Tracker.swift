@@ -11,6 +11,11 @@ actor Tracker {
         self.overlay = overlay
     }
 
+    /// Limits halos to players on or near the calibrated court (FR-14).
+    func setCalibration(_ calibration: CourtCalibration?) {
+        court.calibration = calibration
+    }
+
     func reset() {
         court.reset()
         publish(TrackingFrame())

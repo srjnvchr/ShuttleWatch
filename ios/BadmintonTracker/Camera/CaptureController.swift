@@ -1,5 +1,6 @@
 import AVFoundation
 import Observation
+import TrackingKit
 import UIKit
 
 /// Owns the back camera for the whole app (FR-11, FR-27, FR-29).
@@ -31,6 +32,19 @@ final class CaptureController {
         }
     }
 
+    /// Where the court is in the picture (FR-13). Kept between launches, since a tripod stays put.
+    /// Redo it whenever the phone moves.
+    var calibration: CourtCalibration? {
+        didSet {
+            Self.save(calibration)
+            let calibration = calibration
+            Task { await processor.setCalibration(calibration) }
+        }
+    }
+
+    /// The camera image's width divided by height, which depends on how the phone is held.
+    private(set) var imageAspect: CGFloat = 1080.0 / 1920.0
+
     let session = AVCaptureSession()
     let overlay: TrackingOverlay
 
@@ -40,6 +54,7 @@ final class CaptureController {
     @ObservationIgnored private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
     @ObservationIgnored private var rotationObservation: NSKeyValueObservation?
     @ObservationIgnored private var recordingURL: URL?
+    @ObservationIgnored private var recordingCalibration: CourtCalibration?
     @ObservationIgnored private var holds = 0
     @ObservationIgnored private var isConfigured = false
 
@@ -48,6 +63,25 @@ final class CaptureController {
         self.overlay = overlay
         processor = FrameProcessor(tracker: Tracker(overlay: overlay))
         frameDelegate = FrameDelegate(processor: processor)
+        calibration = Self.loadCalibration()
+        let saved = calibration
+        let processor = processor
+        Task { await processor.setCalibration(saved) }
+    }
+
+    private static let calibrationKey = "courtCalibration"
+
+    private static func loadCalibration() -> CourtCalibration? {
+        guard let data = UserDefaults.standard.data(forKey: calibrationKey) else { return nil }
+        return try? JSONDecoder().decode(CourtCalibration.self, from: data)
+    }
+
+    private static func save(_ calibration: CourtCalibration?) {
+        if let calibration, let data = try? JSONEncoder().encode(calibration) {
+            UserDefaults.standard.set(data, forKey: calibrationKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: calibrationKey)
+        }
     }
 
     // MARK: Running
@@ -142,6 +176,9 @@ final class CaptureController {
         let angle = coordinator.videoRotationAngleForHorizonLevelCapture
         if connection.isVideoRotationAngleSupported(angle) {
             connection.videoRotationAngle = angle
+            // Turned a quarter, the 1920 x 1080 frames become 1080 x 1920.
+            let upright = Int(angle.rounded()) % 180 == 90
+            imageAspect = upright ? 1080.0 / 1920.0 : 1920.0 / 1080.0
         }
     }
 
@@ -175,6 +212,7 @@ final class CaptureController {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             recordingStartedAt = try await processor.startRecording(to: url)
             recordingURL = url
+            recordingCalibration = calibration.flatMap { $0.isValid && $0.fits(imageAspect: imageAspect) ? $0 : nil }
             // A phone on a tripod must not lock its screen mid-match.
             UIApplication.shared.isIdleTimerDisabled = true
             return true
@@ -194,6 +232,11 @@ final class CaptureController {
         applyCaptureRotation()
         await release()
         guard let savedURL else { return nil }
-        return RecordingSegment(fileName: savedURL.lastPathComponent, startedAt: startedAt, endedAt: .now)
+        return RecordingSegment(
+            fileName: savedURL.lastPathComponent,
+            startedAt: startedAt,
+            endedAt: .now,
+            courtCalibration: recordingCalibration
+        )
     }
 }

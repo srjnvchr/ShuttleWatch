@@ -1,4 +1,5 @@
 import Foundation
+import TrackingKit
 
 /// One continuous recording. A match can have several if recording is stopped and started.
 nonisolated struct RecordingSegment: Hashable, Codable, Sendable {
@@ -6,6 +7,8 @@ nonisolated struct RecordingSegment: Hashable, Codable, Sendable {
     /// Wall-clock time of the first frame: time zero of this video.
     let startedAt: Date
     let endedAt: Date
+    /// The court calibration in use while recording, so the Mac tool and Python can use it.
+    var courtCalibration: CourtCalibration? = nil
 }
 
 /// Training data kept beside a match (FR-11). These are not scoring rules, so they live in

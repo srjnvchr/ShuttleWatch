@@ -1,5 +1,6 @@
 import Foundation
 import ScoringKit
+import TrackingKit
 
 /// Writes labels.json beside a match's videos, for the Python pipeline (FR-11, FR-12).
 /// Each rally gets its winner, score, and times, both as dates and as seconds into its video.
@@ -15,6 +16,8 @@ enum LabelExport {
             let file: String
             let startedAt: Date
             let endedAt: Date
+            /// Court corners in the image and the court's size in metres, if calibrated.
+            let court: CourtCalibration?
         }
 
         struct Rally: Encodable, Equatable {
@@ -87,7 +90,9 @@ enum LabelExport {
                 gamesPerMatch: format.gamesPerMatch
             ),
             marksRallyStarts: model.labels.marksRallyStarts,
-            videos: segments.map { .init(file: $0.fileName, startedAt: $0.startedAt, endedAt: $0.endedAt) },
+            videos: segments.map {
+                .init(file: $0.fileName, startedAt: $0.startedAt, endedAt: $0.endedAt, court: $0.courtCalibration)
+            },
             rallies: rallies
         )
     }

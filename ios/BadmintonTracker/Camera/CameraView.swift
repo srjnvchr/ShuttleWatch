@@ -1,5 +1,6 @@
 import SwiftUI
 import ScoringKit
+import TrackingKit
 
 /// FR-29: the live camera preview with each side's score on top. View only, so stray
 /// touches while setting up the tripod never change the score.
@@ -8,21 +9,44 @@ struct CameraView: View {
     let model: ScoringViewModel
     let onShowScoring: () -> Void
     @Environment(CaptureController.self) private var capture
+    @State private var isCalibrating = false
 
     var body: some View {
-        @Bindable var capture = capture
         ZStack {
             Color.black.ignoresSafeArea()
             preview
-            if capture.isTrackingEnabled, let frame = capture.overlay.frame {
-                TrackingOverlayView(frame: frame)
+            if isCalibrating {
+                CalibrationView(
+                    existing: capture.calibration,
+                    imageAspect: capture.imageAspect,
+                    onSave: { capture.calibration = $0; isCalibrating = false },
+                    onClear: { capture.calibration = nil; isCalibrating = false },
+                    onCancel: { isCalibrating = false }
+                )
+            } else if capture.isTrackingEnabled, let frame = capture.overlay.frame {
+                TrackingOverlayView(frame: frame, calibration: capture.calibration)
                     .ignoresSafeArea()
             }
         }
         .overlay(alignment: .top) {
-            scoreBar.padding()
+            if !isCalibrating {
+                scoreBar.padding()
+            }
         }
         .overlay(alignment: .bottom) {
+            if !isCalibrating {
+                bottomButtons
+            }
+        }
+        .task { await capture.acquire() }
+        .onDisappear {
+            Task { await capture.release() }
+        }
+    }
+
+    private var bottomButtons: some View {
+        @Bindable var capture = capture
+        return VStack(spacing: 8) {
             HStack {
                 Toggle(isOn: $capture.isTrackingEnabled) {
                     Label("Tracking", systemImage: "scope")
@@ -30,16 +54,18 @@ struct CameraView: View {
                 .toggleStyle(.button)
                 .buttonStyle(.bordered)
                 .tint(.white)
-                Button("Scoring", systemImage: "rectangle.split.1x2", action: onShowScoring)
-                    .buttonStyle(.borderedProminent)
+                Button(capture.calibration == nil ? "Calibrate" : "Recalibrate", systemImage: "square.dashed") {
+                    isCalibrating = true
+                }
+                .buttonStyle(.bordered)
+                .tint(.white)
+                .disabled(capture.status != .running)
             }
-            .controlSize(.large)
-            .padding()
+            Button("Scoring", systemImage: "rectangle.split.1x2", action: onShowScoring)
+                .buttonStyle(.borderedProminent)
         }
-        .task { await capture.acquire() }
-        .onDisappear {
-            Task { await capture.release() }
-        }
+        .controlSize(.large)
+        .padding()
     }
 
     @ViewBuilder
