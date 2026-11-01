@@ -22,11 +22,8 @@ actor FrameProcessor {
 
     private var pendingURL: URL?
     private var pendingStart: CheckedContinuation<Date, any Error>?
-    // AVAssetWriterInput's append API is deprecated in iOS 27 in favour of input receivers.
-    // The receivers take ownership of each frame, which clashes with sharing frames with the
-    // tracker. The older API still works, so it stays until frame handling is reworked.
     private var writer: AVAssetWriter?
-    private var writerInput: AVAssetWriterInput?
+    private var receiver: AVAssetWriterInput.SampleBufferReceiver?
 
     init(tracker: Tracker) {
         self.tracker = tracker
@@ -56,10 +53,10 @@ actor FrameProcessor {
             self.pendingStart = nil
             pendingURL = nil
         }
-        guard let writer, let writerInput else { return nil }
+        guard let writer, let receiver else { return nil }
         self.writer = nil
-        self.writerInput = nil
-        writerInput.markAsFinished()
+        self.receiver = nil
+        receiver.finish()
         let url = writer.outputURL
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             writer.finishWriting { continuation.resume() }
@@ -71,8 +68,13 @@ actor FrameProcessor {
     func process(_ sampleBuffer: CMSampleBuffer) {
         frameCount += 1
         beginRecordingIfRequested(with: sampleBuffer)
-        if let writerInput, writerInput.isReadyForMoreMediaData {
-            writerInput.append(sampleBuffer)
+        if let receiver {
+            // The writer takes ownership of the frames it is given, but the tracker reads this
+            // frame too. That is safe: camera frames are never changed after capture, and both
+            // only read. This opts the one hand-over out of Swift's ownership check.
+            nonisolated(unsafe) let shared = sampleBuffer
+            // A full writer refuses the frame rather than waiting, so recording never stalls capture.
+            _ = try? receiver.appendImmediately(CMReadySampleBuffer(unsafeBuffer: shared))
         }
         // Track every second frame (30 a second). The tracker skips frames while it is busy,
         // so slow analysis never delays the recording.
@@ -113,15 +115,14 @@ actor FrameProcessor {
             AVVideoWidthKey: size.width,
             AVVideoHeightKey: size.height,
         ])
-        input.expectsMediaDataInRealTime = true
         guard writer.canAdd(input) else { throw RecordingError.cannotCreateWriter }
-        writer.add(input)
+        let receiver = writer.inputReceiver(for: input)
 
         let startTime = CMSampleBufferGetPresentationTimeStamp(firstFrame)
-        guard writer.startWriting() else { throw RecordingError.cannotCreateWriter }
+        try writer.start()
         writer.startSession(atSourceTime: startTime)
         self.writer = writer
-        writerInput = input
+        self.receiver = receiver
 
         // Frame times use the host clock. Turn the first frame's time into a wall-clock date,
         // so rally taps (stored as dates) can be placed on the video's timeline.
