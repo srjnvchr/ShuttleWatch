@@ -11,7 +11,8 @@ let package = Package(
     name: "ScoringKit",
     platforms: [
         .iOS("27.2"),
-        .watchOS("27.2"),
+        // Apple Watch Series 8 stops at watchOS 26.
+        .watchOS("26.0"),
     ],
     products: [
         .library(

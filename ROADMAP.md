@@ -246,6 +246,6 @@ Picked from the Could items in section 6, in order of what I actually use.
 
 ## 12. Open questions
 
-- [ ] Which iPhone and Apple Watch models will this run on? This affects ML performance.
+- [x] Which iPhone and Apple Watch models will this run on? iPhone 14 Pro on iOS 27.2, and Apple Watch Series 8 on watchOS 26.6. The Series 8 cannot update to watchOS 27, so the Watch app targets watchOS 26. ML performance is to be measured on the iPhone 14 Pro.
 - [ ] Are the Phase 0 exit targets right, once real footage is in hand?
 - [ ] Final app and repository name.
