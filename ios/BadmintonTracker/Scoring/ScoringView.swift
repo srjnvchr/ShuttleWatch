@@ -103,9 +103,11 @@ struct ScoringView: View {
                 Text(model.gameLabel)
                     .font(.subheadline.weight(.medium))
                 Spacer()
+                RecordButton(model: model)
                 Button("Camera", systemImage: "video") { showingCamera = true }
                     .labelStyle(.iconOnly)
                 Button("Undo", systemImage: "arrow.uturn.backward") { model.undo() }
+                    .labelStyle(.iconOnly)
                     .disabled(!model.canUndo)
                 Menu {
                     Button("End match", systemImage: "xmark", role: .destructive) { confirmingEnd = true }
@@ -119,6 +121,17 @@ struct ScoringView: View {
                 Text(serve)
                     .font(.callout)
                     .multilineTextAlignment(.center)
+            }
+
+            if model.awaitingServe {
+                Button("Serve", systemImage: "figure.badminton") { model.markRallyStart() }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    .controlSize(.large)
+            } else if model.currentRallyStart != nil {
+                Label("Rally in play", systemImage: "circle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.green)
             }
 
             ForEach(model.visibleReminders, id: \.self) { reminder in

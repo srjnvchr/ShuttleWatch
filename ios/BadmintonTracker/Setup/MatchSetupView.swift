@@ -45,6 +45,12 @@ struct MatchSetupView: View {
                 }
 
                 Section {
+                    Toggle("Mark rally starts", isOn: $form.marksRallyStarts)
+                } footer: {
+                    Text("Tap Serve as each rally starts. Recordings then get exact rally times for training.")
+                }
+
+                Section {
                     DisclosureGroup("Advanced") {
                         Stepper("Points per game: \(form.pointsPerGame)", value: $form.pointsPerGame, in: 1...99)
                         Stepper("Point cap: \(form.pointCap)", value: $form.pointCap, in: 1...99)

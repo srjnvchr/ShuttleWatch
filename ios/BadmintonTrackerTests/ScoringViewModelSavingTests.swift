@@ -24,9 +24,10 @@ struct ScoringViewModelSavingTests {
 
     @Test func everyEventGetsATime() throws {
         let model = try singles()
+        // The clock's first tick (1,001) names the recording folder when the match is created.
         model.rallyWon(by: .a)
         model.rallyWon(by: .b)
-        #expect(model.eventDates == [Date(timeIntervalSince1970: 1_001), Date(timeIntervalSince1970: 1_002)])
+        #expect(model.eventDates == [Date(timeIntervalSince1970: 1_002), Date(timeIntervalSince1970: 1_003)])
     }
 
     @Test func undoRemovesTheLastTime() throws {

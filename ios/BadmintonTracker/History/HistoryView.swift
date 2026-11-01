@@ -26,6 +26,10 @@ struct HistoryView: View {
             }
             .onDelete { offsets in
                 for index in offsets {
+                    // Deleting a match also deletes its videos, which can be several GB.
+                    if let labels = records[index].labels {
+                        RecordingStore.deleteFolder(named: labels.folderName)
+                    }
                     context.delete(records[index])
                 }
                 try? context.save()
@@ -60,6 +64,9 @@ struct MatchDetailView: View {
                         Text(record.startedAt, format: .dateTime.day().month().year().hour().minute())
                     }
                     LabeledContent("Rallies", value: "\(model.state.rallyCount)")
+                    if !model.labels.recordings.isEmpty {
+                        LabeledContent("Videos", value: videoSummary(model.labels.recordings))
+                    }
                 }
                 Section("Log") {
                     ForEach(RallyLog.entries(for: model)) { entry in
@@ -87,5 +94,12 @@ struct MatchDetailView: View {
                 description: Text("Its saved data could not be read.")
             )
         }
+    }
+
+    /// For example: "2 videos, 14 min".
+    private func videoSummary(_ recordings: [RecordingSegment]) -> String {
+        let seconds = recordings.reduce(0) { $0 + $1.endedAt.timeIntervalSince($1.startedAt) }
+        let count = recordings.count == 1 ? "1 video" : "\(recordings.count) videos"
+        return "\(count), \(Int((seconds / 60).rounded())) min"
     }
 }

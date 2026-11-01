@@ -36,6 +36,10 @@ enum RallyLog {
                 if endedGame {
                     parts.append("game over")
                 }
+                if let start = model.labels.rallyStarts[index] {
+                    let length = model.eventDates[index].timeIntervalSince(start)
+                    parts.append(String(format: "%.1f s", length))
+                }
                 detail = parts.joined(separator: ", ")
             case .gameStarted(let server, let receiver):
                 title = "Game \(after.gameNumber) starts"

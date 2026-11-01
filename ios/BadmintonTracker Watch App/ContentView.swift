@@ -30,8 +30,13 @@ struct MatchView: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            sideButton(.a)
-            sideButton(.b)
+            if snapshot.awaitingServe {
+                compactScore
+                serveButton
+            } else {
+                sideButton(.a)
+                sideButton(.b)
+            }
             footer
         }
         .overlay(alignment: .top) {
@@ -80,8 +85,41 @@ struct MatchView: View {
         .accessibilityLabel("Point to \(snapshot.names[side]), \(snapshot.score[side])")
     }
 
+    /// Rally start marking (FR-11): tap as the serve happens, then the point buttons return.
+    private var serveButton: some View {
+        Button {
+            link.send(.serve)
+        } label: {
+            Label("Serve", systemImage: "figure.badminton")
+                .font(.title3.bold())
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .tint(.green)
+    }
+
+    private var compactScore: some View {
+        HStack {
+            Text(snapshot.names.a)
+                .lineLimit(1)
+            Spacer(minLength: 4)
+            Text("\(snapshot.score.a) - \(snapshot.score.b)")
+                .font(.headline.monospacedDigit())
+            Spacer(minLength: 4)
+            Text(snapshot.names.b)
+                .lineLimit(1)
+        }
+        .font(.footnote)
+        .minimumScaleFactor(0.6)
+    }
+
     private var footer: some View {
         HStack {
+            if snapshot.isRecording {
+                Image(systemName: "record.circle.fill")
+                    .foregroundStyle(.red)
+                    .font(.caption2)
+                    .accessibilityLabel("Recording")
+            }
             Text(statusLine)
                 .font(.caption2)
                 .foregroundStyle(.secondary)

@@ -10,40 +10,81 @@ final class ScoringViewModel {
     let names: PlayerNames
     /// When each event in `match.events` was recorded, in the same order (FR-11 labels).
     private(set) var eventDates: [Date]
+    /// Recordings and rally start taps kept beside the match (FR-11).
+    private(set) var labels: MatchLabels
+    /// When Serve was tapped for the rally being played. Nil between rallies.
+    private(set) var currentRallyStart: Date?
     /// Called after every change, so the match can be saved.
     @ObservationIgnored var onChange: (() -> Void)?
     /// Reminders the players have dismissed. Cleared whenever the match changes.
     private var dismissedReminders: Set<MatchState.Reminder> = []
     @ObservationIgnored private let now: () -> Date
 
-    init(setup: MatchSetup, names: PlayerNames, now: @escaping () -> Date = Date.init) {
+    init(
+        setup: MatchSetup,
+        names: PlayerNames,
+        marksRallyStarts: Bool = false,
+        now: @escaping () -> Date = Date.init
+    ) {
         match = Match(setup: setup)
         self.names = names
         eventDates = []
+        let title = "\(names.name(of: .a, kind: setup.kind)) vs \(names.name(of: .b, kind: setup.kind))"
+        labels = MatchLabels(
+            folderName: MatchLabels.folderName(title: title, startedAt: now()),
+            marksRallyStarts: marksRallyStarts
+        )
         self.now = now
     }
 
     /// Reopens a saved match. Dates are padded or trimmed to match the events.
-    init(match: Match, names: PlayerNames, eventDates: [Date], now: @escaping () -> Date = Date.init) {
+    init(
+        match: Match,
+        names: PlayerNames,
+        eventDates: [Date],
+        labels: MatchLabels? = nil,
+        now: @escaping () -> Date = Date.init
+    ) {
         self.match = match
         self.names = names
         let known = Array(eventDates.prefix(match.events.count))
         let fallback = known.last ?? now()
         self.eventDates = known + Array(repeating: fallback, count: match.events.count - known.count)
+        self.labels = labels ?? MatchLabels(folderName: UUID().uuidString, marksRallyStarts: false)
         self.now = now
     }
 
     var state: MatchState { match.state }
     var kind: MatchKind { match.setup.kind }
-    var canUndo: Bool { match.canUndo }
+    var canUndo: Bool { match.canUndo || currentRallyStart != nil }
     var canScore: Bool { state.status == .inPlay }
     var needsGameSetup: Bool { state.status == .awaitingGameSetup }
     var isOver: Bool { state.winner != nil }
+    /// Rally start marking is on and the next rally has not started yet.
+    var awaitingServe: Bool { labels.marksRallyStarts && canScore && currentRallyStart == nil }
 
     // MARK: Actions
 
+    /// Marks the serve of the next rally, so it gets a start time (FR-11 labels).
+    func markRallyStart() {
+        guard awaitingServe else { return }
+        currentRallyStart = now()
+        onChange?()
+    }
+
     func rallyWon(by side: Side) {
-        record(.rallyWon(by: side))
+        let start = currentRallyStart
+        record(.rallyWon(by: side)) { [self] in
+            if let start {
+                labels.rallyStarts[match.events.count - 1] = start
+            }
+            currentRallyStart = nil
+        }
+    }
+
+    func addRecording(_ segment: RecordingSegment) {
+        labels.recordings.append(segment)
+        onChange?()
     }
 
     func startGame(server: Player, receiver: Player) {
@@ -59,9 +100,18 @@ final class ScoringViewModel {
         record(.matchEndedEarly(winner: winner))
     }
 
+    /// Takes back a Serve tap first. Otherwise removes the last event. Undoing a point returns
+    /// to that rally in progress, so the right winner can be tapped.
     func undo() {
+        if currentRallyStart != nil {
+            currentRallyStart = nil
+            onChange?()
+            return
+        }
+        let lastIndex = match.events.count - 1
         guard match.undo() != nil else { return }
         eventDates.removeLast()
+        currentRallyStart = labels.rallyStarts.removeValue(forKey: lastIndex)
         dismissedReminders = []
         onChange?()
     }
@@ -70,7 +120,7 @@ final class ScoringViewModel {
         dismissedReminders.insert(reminder)
     }
 
-    private func record(_ event: MatchEvent) {
+    private func record(_ event: MatchEvent, then update: () -> Void = {}) {
         // The screen only offers actions the rules allow. If a stale tap slips
         // through, ScoringKit rejects it and the match stays as it was.
         do {
@@ -79,6 +129,7 @@ final class ScoringViewModel {
             return
         }
         eventDates.append(now())
+        update()
         dismissedReminders = []
         onChange?()
     }

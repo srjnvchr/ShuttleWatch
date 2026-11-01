@@ -3,37 +3,51 @@ import ScoringKit
 
 /// FR-29: the live camera preview with each side's score on top. View only, so stray
 /// touches while setting up the tripod never change the score.
+/// FR-27: optional player halos and shuttle trail, drawn on screen only.
 struct CameraView: View {
     let model: ScoringViewModel
     let onShowScoring: () -> Void
-    @State private var feed = CameraFeed()
+    @Environment(CaptureController.self) private var capture
 
     var body: some View {
+        @Bindable var capture = capture
         ZStack {
             Color.black.ignoresSafeArea()
             preview
+            if capture.isTrackingEnabled, let frame = capture.overlay.frame {
+                TrackingOverlayView(frame: frame)
+                    .ignoresSafeArea()
+            }
         }
         .overlay(alignment: .top) {
             scoreBar.padding()
         }
         .overlay(alignment: .bottom) {
-            Button("Scoring", systemImage: "rectangle.split.1x2", action: onShowScoring)
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .padding()
+            HStack {
+                Toggle(isOn: $capture.isTrackingEnabled) {
+                    Label("Tracking", systemImage: "scope")
+                }
+                .toggleStyle(.button)
+                .buttonStyle(.bordered)
+                .tint(.white)
+                Button("Scoring", systemImage: "rectangle.split.1x2", action: onShowScoring)
+                    .buttonStyle(.borderedProminent)
+            }
+            .controlSize(.large)
+            .padding()
         }
-        .task { await feed.start() }
+        .task { await capture.acquire() }
         .onDisappear {
-            Task { await feed.stop() }
+            Task { await capture.release() }
         }
     }
 
     @ViewBuilder
     private var preview: some View {
-        switch feed.status {
+        switch capture.status {
         case .running:
-            if let device = feed.device {
-                CameraPreview(session: feed.session, device: device)
+            if let device = capture.device {
+                CameraPreview(session: capture.session, device: device)
                     .ignoresSafeArea()
             }
         case .idle:
@@ -57,11 +71,17 @@ struct CameraView: View {
                 sideScore(.a)
                 sideScore(.b)
             }
-            Text(statusLine)
-                .font(.caption.weight(.medium))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(.black.opacity(0.55), in: .capsule)
+            HStack(spacing: 8) {
+                if capture.isRecording {
+                    Label("REC", systemImage: "record.circle.fill")
+                        .foregroundStyle(.red)
+                }
+                Text(statusLine)
+            }
+            .font(.caption.weight(.medium))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(.black.opacity(0.55), in: .capsule)
         }
         .foregroundStyle(.white)
     }

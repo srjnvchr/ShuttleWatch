@@ -5,7 +5,7 @@ import WatchLink
 extension MatchSnapshot {
     /// What the Watch should show for the iPhone's current match.
     @MainActor
-    init(model: ScoringViewModel, handledIntentIDs: [UUID], sentAt: Date) {
+    init(model: ScoringViewModel, handledIntentIDs: [UUID], isRecording: Bool = false, sentAt: Date) {
         let state = model.state
         let status: Status = switch state.status {
         case .matchOver: .matchOver
@@ -30,6 +30,8 @@ extension MatchSnapshot {
             resultTitle: model.resultTitle,
             canUndo: model.canUndo,
             rallyCount: state.rallyCount,
+            awaitingServe: model.awaitingServe,
+            isRecording: isRecording,
             handledIntentIDs: handledIntentIDs,
             sentAt: sentAt
         )

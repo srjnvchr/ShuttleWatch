@@ -11,12 +11,17 @@ import SwiftUI
 @main
 struct BadmintonTrackerApp: App {
     @State private var watchSync = WatchSyncService()
+    @State private var capture = CaptureController()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(watchSync)
-                .task { watchSync.activate() }
+                .environment(capture)
+                .task {
+                    watchSync.isRecording = { [capture] in capture.isRecording }
+                    watchSync.activate()
+                }
         }
         .modelContainer(for: MatchRecord.self)
     }

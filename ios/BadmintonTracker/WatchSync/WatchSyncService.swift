@@ -14,6 +14,8 @@ final class WatchSyncService: NSObject {
         didSet { push() }
     }
 
+    /// Whether the iPhone is recording, shown on the Watch. Set by the app.
+    @ObservationIgnored var isRecording: () -> Bool = { false }
     @ObservationIgnored private var inbox = IntentInbox()
     @ObservationIgnored private let session: WCSession? = WCSession.isSupported() ? .default : nil
 
@@ -28,6 +30,7 @@ final class WatchSyncService: NSObject {
             switch message.intent {
             case .point(let side): model.rallyWon(by: side)
             case .undo: model.undo()
+            case .serve: model.markRallyStart()
             }
         }
         // Always report back, so the Watch can clear the tap even if it changed nothing.
@@ -36,9 +39,9 @@ final class WatchSyncService: NSObject {
 
     func snapshot(at date: Date = .now) -> MatchSnapshot {
         guard let model else {
-            return .noMatch(handledIntentIDs: inbox.recent, sentAt: date)
+            return .noMatch(handledIntentIDs: inbox.recent, isRecording: isRecording(), sentAt: date)
         }
-        return MatchSnapshot(model: model, handledIntentIDs: inbox.recent, sentAt: date)
+        return MatchSnapshot(model: model, handledIntentIDs: inbox.recent, isRecording: isRecording(), sentAt: date)
     }
 
     /// Sends the current snapshot. The application context keeps the latest for when the

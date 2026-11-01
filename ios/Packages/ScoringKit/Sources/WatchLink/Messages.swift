@@ -6,6 +6,8 @@ import ScoringKit
 public enum WatchIntent: Hashable, Sendable, Codable {
     case point(Side)
     case undo
+    /// The serve of the next rally, when rally start marking is on (FR-11 labels).
+    case serve
 }
 
 /// One intent with an ID, so the iPhone can ignore it if it arrives twice.
@@ -51,6 +53,10 @@ public struct MatchSnapshot: Hashable, Sendable, Codable {
     public var resultTitle: String?
     public var canUndo: Bool
     public var rallyCount: Int
+    /// Rally start marking is on and the next rally has not started: the Watch shows Serve.
+    public var awaitingServe: Bool
+    /// The iPhone is recording video.
+    public var isRecording: Bool
     /// Recent intents the iPhone has handled, so the Watch can clear its waiting taps.
     public var handledIntentIDs: [UUID]
     /// When the iPhone made this snapshot. The Watch keeps only the newest.
@@ -69,6 +75,8 @@ public struct MatchSnapshot: Hashable, Sendable, Codable {
         resultTitle: String?,
         canUndo: Bool,
         rallyCount: Int,
+        awaitingServe: Bool = false,
+        isRecording: Bool = false,
         handledIntentIDs: [UUID],
         sentAt: Date
     ) {
@@ -84,12 +92,14 @@ public struct MatchSnapshot: Hashable, Sendable, Codable {
         self.resultTitle = resultTitle
         self.canUndo = canUndo
         self.rallyCount = rallyCount
+        self.awaitingServe = awaitingServe
+        self.isRecording = isRecording
         self.handledIntentIDs = handledIntentIDs
         self.sentAt = sentAt
     }
 
     /// Shown when no match is open on the iPhone.
-    public static func noMatch(handledIntentIDs: [UUID], sentAt: Date) -> MatchSnapshot {
+    public static func noMatch(handledIntentIDs: [UUID], isRecording: Bool = false, sentAt: Date) -> MatchSnapshot {
         MatchSnapshot(
             status: .noMatch,
             names: PerSide(a: "", b: ""),
@@ -103,6 +113,7 @@ public struct MatchSnapshot: Hashable, Sendable, Codable {
             resultTitle: nil,
             canUndo: false,
             rallyCount: 0,
+            isRecording: isRecording,
             handledIntentIDs: handledIntentIDs,
             sentAt: sentAt
         )

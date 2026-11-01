@@ -11,6 +11,9 @@ struct MatchSetupForm: Hashable {
     var pointCap = MatchFormat.standard.pointCap
     var firstServingSide: Side = .a
     var sideAtNearEnd: Side = .a
+    /// Tap Serve at the start of each rally, so recordings get rally start times (FR-11).
+    /// On while collecting training data. Turned off once the model finds rally starts itself.
+    var marksRallyStarts = true
 
     static let gameChoices = [1, 3]
 
@@ -40,6 +43,6 @@ struct MatchSetupForm: Hashable {
             firstServingSide: firstServingSide,
             sideAtNearEnd: sideAtNearEnd
         )
-        return ScoringViewModel(setup: setup, names: names)
+        return ScoringViewModel(setup: setup, names: names, marksRallyStarts: marksRallyStarts)
     }
 }

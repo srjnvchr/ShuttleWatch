@@ -17,6 +17,8 @@ final class MatchRecord {
     var matchData: Data
     var namesData: Data
     var eventDates: [Date]
+    /// JSON of the match's MatchLabels: recordings and rally start taps.
+    var labelsData: Data = Data()
 
     @MainActor
     init(model: ScoringViewModel, startedAt: Date = .now) {
@@ -45,6 +47,9 @@ final class MatchRecord {
         if let data = try? encoder.encode(model.names) {
             namesData = data
         }
+        if let data = try? encoder.encode(model.labels) {
+            labelsData = data
+        }
     }
 
     /// Rebuilds the match, replaying every event through the rules. Nil if it cannot be read.
@@ -55,7 +60,12 @@ final class MatchRecord {
             let match = try? decoder.decode(Match.self, from: matchData),
             let names = try? decoder.decode(PlayerNames.self, from: namesData)
         else { return nil }
-        return ScoringViewModel(match: match, names: names, eventDates: eventDates)
+        return ScoringViewModel(match: match, names: names, eventDates: eventDates, labels: labels)
+    }
+
+    /// Nil for matches saved before labels existed.
+    var labels: MatchLabels? {
+        try? JSONDecoder().decode(MatchLabels.self, from: labelsData)
     }
 
     @MainActor

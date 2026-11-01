@@ -19,13 +19,15 @@ import ScoringKit
             resultTitle: nil,
             canUndo: true,
             rallyCount: 4,
+            awaitingServe: true,
+            isRecording: true,
             handledIntentIDs: handled,
             sentAt: Date(timeIntervalSince1970: seconds)
         )
     }
 
     @Test func intentsSurviveEncoding() throws {
-        for intent in [WatchIntent.point(.a), .point(.b), .undo] {
+        for intent in [WatchIntent.point(.a), .point(.b), .undo, .serve] {
             let message = IntentMessage(intent: intent)
             let data = try WatchMessage.encode(message)
             #expect(try WatchMessage.decode(IntentMessage.self, from: data) == message)

@@ -7,6 +7,7 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     @Environment(WatchSyncService.self) private var watchSync
+    @Environment(CaptureController.self) private var capture
     @State private var scoring: ScoringViewModel?
     @State private var record: MatchRecord?
     @State private var checkedForUnfinished = false
@@ -40,6 +41,7 @@ struct ContentView: View {
             guard let model else { return }
             record.update(from: model)
             try? context.save()
+            LabelExport.write(for: model)
             watchSync.push()
         }
         self.record = record
@@ -48,14 +50,20 @@ struct ContentView: View {
     }
 
     private func closeMatch() {
-        // A match closed before anything happened (doubles setup cancelled) is not worth keeping.
-        if let record, let scoring, scoring.match.events.isEmpty {
-            context.delete(record)
-            try? context.save()
+        Task {
+            // Recording belongs to the match, so it stops when the match closes.
+            if let segment = await capture.stopRecording() {
+                scoring?.addRecording(segment)
+            }
+            // A match closed before anything happened (doubles setup cancelled) is not worth keeping.
+            if let record, let scoring, scoring.match.events.isEmpty, scoring.labels.recordings.isEmpty {
+                context.delete(record)
+                try? context.save()
+            }
+            scoring = nil
+            record = nil
+            watchSync.model = nil
         }
-        scoring = nil
-        record = nil
-        watchSync.model = nil
     }
 
     private func reopenUnfinishedMatch() {
@@ -75,4 +83,5 @@ struct ContentView: View {
     ContentView()
         .modelContainer(for: MatchRecord.self, inMemory: true)
         .environment(WatchSyncService())
+        .environment(CaptureController())
 }
