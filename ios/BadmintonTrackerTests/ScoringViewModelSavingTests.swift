@@ -56,7 +56,7 @@ struct ScoringViewModelSavingTests {
         #expect(!model.isOver)
         model.endMatchEarly(winner: .a)
         #expect(model.isOver)
-        #expect(model.resultTitle == "Priya win (ended early)")
+        #expect(model.resultTitle == "Priya wins (ended early)")
         #expect(model.completedGamesSummary == "1-0")
     }
 
@@ -64,7 +64,7 @@ struct ScoringViewModelSavingTests {
         let model = try singles()
         #expect(model.state.leader == nil)
         model.endMatchEarly(winner: .b)
-        #expect(model.resultTitle == "Sam win (ended early)")
+        #expect(model.resultTitle == "Sam wins (ended early)")
         #expect(model.completedGamesSummary == "")
     }
 
@@ -79,7 +79,7 @@ struct ScoringViewModelSavingTests {
     @Test func finishedMatchTitleHasNoEarlyNote() throws {
         let model = try singles()
         for _ in 0..<21 { model.rallyWon(by: .b) }
-        #expect(model.resultTitle == "Sam win")
+        #expect(model.resultTitle == "Sam wins")
     }
 
     @Test func reopenedMatchKeepsItsTimesAndPadsMissingOnes() throws {

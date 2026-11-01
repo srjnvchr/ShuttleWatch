@@ -123,9 +123,19 @@ final class ScoringViewModel {
         gameScores.map { "\($0.a)-\($0.b)" }.joined(separator: ", ")
     }
 
-    /// For example: "Priya win" or "Priya win (ended early)".
+    /// "Priya wins" in singles, "Priya & Ana win" in doubles.
+    func wins(_ side: Side) -> String {
+        "\(name(of: side)) \(kind == .singles ? "wins" : "win")"
+    }
+
+    /// "Priya leads" in singles, "Priya & Ana lead" in doubles.
+    func leads(_ side: Side) -> String {
+        "\(name(of: side)) \(kind == .singles ? "leads" : "lead")"
+    }
+
+    /// For example: "Priya wins" or "Priya wins (ended early)".
     var resultTitle: String? {
         guard let winner = state.winner else { return nil }
-        return "\(name(of: winner)) win" + (state.endedEarly ? " (ended early)" : "")
+        return wins(winner) + (state.endedEarly ? " (ended early)" : "")
     }
 }

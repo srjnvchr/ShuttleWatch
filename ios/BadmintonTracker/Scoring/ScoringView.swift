@@ -40,7 +40,7 @@ struct ScoringView: View {
         guard let leader = model.state.leader else {
             return "The match is saved as complete with the winner you pick."
         }
-        return "\(model.name(of: leader)) lead, so they win. The match is saved as complete."
+        return "\(model.leads(leader)), so the match ends as a win. It is saved as complete."
     }
 
     private var scoring: some View {
@@ -143,6 +143,7 @@ struct ScoringView: View {
                 Button("Undo", systemImage: "arrow.uturn.backward") { model.undo() }
                     .buttonStyle(.bordered)
                 Button("Camera", systemImage: "video") { showingCamera = true }
+                    .labelStyle(.iconOnly)
                     .buttonStyle(.bordered)
                 Button("New match", action: onEndMatch)
                     .buttonStyle(.borderedProminent)

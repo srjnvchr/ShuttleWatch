@@ -59,7 +59,7 @@ struct MatchRecordTests {
         for _ in 0..<21 { model.rallyWon(by: .b) }
         record.update(from: model)
         #expect(record.isFinished)
-        #expect(record.result == "Sam win, 0-21")
+        #expect(record.result == "Sam wins, 0-21")
     }
 
     @Test func earlyEndIsSavedAsComplete() throws {
@@ -69,7 +69,7 @@ struct MatchRecordTests {
         model.endMatchEarly(winner: .a)
         record.update(from: model)
         #expect(record.isFinished)
-        #expect(record.result == "Priya win (ended early), 1-0")
+        #expect(record.result == "Priya wins (ended early), 1-0")
     }
 
     @Test func undoAfterTheEndMarksItUnfinishedAgain() throws {

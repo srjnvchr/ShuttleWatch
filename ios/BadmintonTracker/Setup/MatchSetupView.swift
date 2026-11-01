@@ -58,6 +58,13 @@ struct MatchSetupView: View {
             }
             .navigationTitle("New match")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink {
+                        HistoryView()
+                    } label: {
+                        Label("History", systemImage: "clock.arrow.circlepath")
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Start") {
                         if let model = form.makeViewModel() {
