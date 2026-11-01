@@ -2,7 +2,7 @@ import Foundation
 import ScoringKit
 
 /// Display names for the players. ScoringKit only knows sides and slots.
-struct PlayerNames: Hashable {
+struct PlayerNames: Hashable, Codable {
     private var names: [Player: String] = [:]
 
     init(_ names: [Player: String] = [:]) {
