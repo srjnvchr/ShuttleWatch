@@ -20,6 +20,8 @@ public struct MatchState: Hashable, Sendable {
     public private(set) var status: Status
     /// How many rallies have been played in the whole match.
     public private(set) var rallyCount = 0
+    /// Doubles: which player of each side stands in their right service court.
+    public private(set) var rightCourtSlot = PerSide(a: Player.Slot.first, b: .first)
 
     public init(setup: MatchSetup) {
         self.setup = setup
@@ -52,29 +54,54 @@ public struct MatchState: Hashable, Sendable {
         return nil
     }
 
-    /// The player serving the next rally, or nil when no rally can be played.
-    public var server: Player? {
-        guard status == .inPlay else { return nil }
-        return .singles(servingSide)
-    }
-
-    /// The player receiving the next rally. Always in the court diagonally opposite the server.
-    public var receiver: Player? {
-        guard status == .inPlay else { return nil }
-        return .singles(servingSide.opponent)
-    }
-
     /// The service court the server stands in, from the serving side's score.
     public var serviceCourt: ServiceCourt? {
         guard status == .inPlay else { return nil }
         return ServiceCourt(forScore: score[servingSide])
     }
 
+    /// The player serving the next rally, or nil when no rally can be played.
+    /// Doubles: the serving side's player in the court matching their score.
+    public var server: Player? {
+        guard let serviceCourt else { return nil }
+        return player(of: servingSide, in: serviceCourt)
+    }
+
+    /// The player receiving the next rally. Always in the court diagonally opposite the server.
+    public var receiver: Player? {
+        guard let serviceCourt else { return nil }
+        return player(of: servingSide.opponent, in: serviceCourt)
+    }
+
+    /// Who stands in a side's right or left service court. Singles has one player per side.
+    public func player(of side: Side, in court: ServiceCourt) -> Player {
+        guard setup.kind == .doubles else { return .singles(side) }
+        let right = Player(side: side, slot: rightCourtSlot[side])
+        return court == .right ? right : right.partner
+    }
+
     mutating func apply(_ event: MatchEvent) throws(ScoringError) {
         switch event {
         case .rallyWon(let side):
             try applyRally(wonBy: side)
+        case .gameStarted(let server, let receiver):
+            try applyGameStart(server: server, receiver: receiver)
         }
+    }
+
+    private mutating func applyGameStart(server: Player, receiver: Player) throws(ScoringError) {
+        switch status {
+        case .matchOver: throw .matchIsOver
+        case .inPlay: throw .gameSetupNotExpected
+        case .awaitingGameSetup: break
+        }
+        guard server.side == servingSide else { throw .wrongServingSide }
+        guard receiver.side == servingSide.opponent else { throw .receiverOnServingSide }
+
+        // At 0-0 both stand in their right court, diagonally opposite each other.
+        rightCourtSlot[server.side] = server.slot
+        rightCourtSlot[receiver.side] = receiver.slot
+        status = .inPlay
     }
 
     private mutating func applyRally(wonBy side: Side) throws(ScoringError) {
@@ -86,6 +113,11 @@ public struct MatchState: Hashable, Sendable {
 
         rallyCount += 1
         score[side] += 1
+        // Doubles: only the serving side changes courts, and only when it wins the rally.
+        // The same player then serves again from the other court.
+        if setup.kind == .doubles && side == servingSide {
+            rightCourtSlot[side] = Player(side: side, slot: rightCourtSlot[side]).partner.slot
+        }
         // Rally point scoring: whoever wins the rally serves the next one.
         servingSide = side
 
