@@ -9,6 +9,8 @@ public enum HaloStyle {
     public static let heightShareOfWidth: CGFloat = 0.3
     /// The smallest halo, in screen points, so far-away players still get a visible ring.
     public static let minimumWidth: CGFloat = 19
+    /// With a court calibration, the halo is a true circle on the floor this many metres across.
+    public static let floorDiameter: CGFloat = 0.8
 
     /// The halo's rectangle, centred on `center`, for a player `playerHeight` tall (both in the same units).
     public static func ring(center: CGPoint, playerHeight: CGFloat, minimumWidth: CGFloat = minimumWidth) -> CGRect {

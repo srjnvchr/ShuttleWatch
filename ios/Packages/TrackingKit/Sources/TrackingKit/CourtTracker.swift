@@ -21,6 +21,12 @@ public final class CourtTracker {
     private var trajectoryRequest = CourtTracker.makeTrajectoryRequest()
     public private(set) var players = PlayerTracker()
     public private(set) var shuttle = ShuttleTrail()
+    /// When set, only players on or near this court get halos (FR-14).
+    public var calibration: CourtCalibration?
+
+    /// How far outside the court lines, in metres, players still count as on court.
+    /// Covers serving and receiving from behind the lines.
+    public static let courtMargin: CGFloat = 1.5
 
     public init() {}
 
@@ -34,7 +40,11 @@ public final class CourtTracker {
     public func process(_ sampleBuffer: CMSampleBuffer) -> (frame: TrackingFrame, analysis: FrameAnalysis)? {
         guard let analysis = analyze(sampleBuffer) else { return nil }
         let time = CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds
-        let marks = players.update(with: analysis.sightings, at: time)
+        var sightings = analysis.sightings
+        if let calibration, calibration.isValid, calibration.fits(imageAspect: analysis.imageAspect) {
+            sightings = sightings.filter { calibration.isOnCourt(imagePoint: $0.feet, margin: Self.courtMargin) }
+        }
+        let marks = players.update(with: sightings, at: time)
         shuttle.update(with: analysis.candidates, at: time)
         let frame = TrackingFrame(
             players: marks,

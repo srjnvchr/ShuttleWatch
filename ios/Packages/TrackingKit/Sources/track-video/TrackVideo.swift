@@ -9,6 +9,11 @@ import UniformTypeIdentifiers
 /// again and again (FR-26).
 ///
 ///     swift run track-video <video.mov> <output folder> [--every 2] [--snapshot-every 1] [--no-video]
+///                           [--court "fx,fy,fx,fy,fx,fy,fx,fy,width,length"]
+///
+/// The court calibration comes from labels.json beside the video, or from --court:
+/// four corners (far left, far right, near right, near left, 0 to 1 from the top left)
+/// then the court's width and length in metres.
 ///
 /// Writes overlay.mov, a PNG snapshot every few seconds, and frames.jsonl with what Vision
 /// found and where each halo and the shuttle trail ended up, one line per analysed frame.
@@ -45,6 +50,16 @@ struct TrackVideo {
         let log = try LineWriter(url: options.output.appending(path: "frames.jsonl"))
         var writer: OverlayWriter?
         let tracker = CourtTracker()
+        var court = options.court ?? Self.calibrationFromLabels(beside: options.input)
+        if court?.imageAspect == 0 {
+            // A hand-typed --court is for this video, so it takes the video's shape.
+            let naturalSize = try await track.load(.naturalSize)
+            court?.imageAspect = naturalSize.width / naturalSize.height
+        }
+        if let court {
+            print("Court calibration: \(court.courtSize.width) x \(court.courtSize.height) m, valid: \(court.isValid)")
+        }
+        tracker.calibration = court
         var stats = Stats()
         var latest: (frame: TrackingFrame, analysis: FrameAnalysis)?
         var nextSnapshot = 0.0
@@ -66,7 +81,7 @@ struct TrackVideo {
                 }
             }
 
-            let image = Drawing.overlay(latest, on: pixels)
+            let image = Drawing.overlay(latest, court: court, on: pixels)
             if seconds >= nextSnapshot, let image {
                 try Drawing.savePNG(image, to: options.output.appending(path: String(format: "snapshot-%06.2fs.png", seconds)))
                 nextSnapshot += options.snapshotEvery
@@ -92,6 +107,23 @@ struct TrackVideo {
         }
         print("Wrote \(options.output.path)")
     }
+
+    /// The calibration the app saved for this video in labels.json, if any.
+    static func calibrationFromLabels(beside video: URL) -> CourtCalibration? {
+        struct Labels: Decodable {
+            struct Video: Decodable {
+                let file: String
+                let court: CourtCalibration?
+            }
+            let videos: [Video]
+        }
+        let url = video.deletingLastPathComponent().appending(path: "labels.json")
+        guard
+            let data = try? Data(contentsOf: url),
+            let labels = try? JSONDecoder().decode(Labels.self, from: data)
+        else { return nil }
+        return labels.videos.first { $0.file == video.lastPathComponent }?.court
+    }
 }
 
 struct Options {
@@ -100,6 +132,7 @@ struct Options {
     var every = 2
     var snapshotEvery = 1.0
     var writeVideo = true
+    var court: CourtCalibration?
 
     init(arguments: [String]) throws {
         var positional: [String] = []
@@ -114,6 +147,14 @@ struct Options {
                 snapshotEvery = value
             case "--no-video":
                 writeVideo = false
+            case "--court":
+                let numbers = (iterator.next() ?? "").split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+                guard numbers.count == 10 else { throw ToolError("--court needs 8 corner numbers then width and length") }
+                court = CourtCalibration(
+                    imageCorners: stride(from: 0, to: 8, by: 2).map { CGPoint(x: numbers[$0], y: numbers[$0 + 1]) },
+                    courtSize: CGSize(width: numbers[8], height: numbers[9]),
+                    imageAspect: 0
+                )
             default:
                 positional.append(argument)
             }
@@ -245,7 +286,7 @@ final class OverlayWriter {
 /// small magenta dots for the raw feet Vision found, red dots for raw shuttle candidates,
 /// and orange halos while a halo is held as airborne.
 enum Drawing {
-    static func overlay(_ result: (frame: TrackingFrame, analysis: FrameAnalysis)?, on pixels: CVPixelBuffer) -> CGImage? {
+    static func overlay(_ result: (frame: TrackingFrame, analysis: FrameAnalysis)?, court: CourtCalibration?, on pixels: CVPixelBuffer) -> CGImage? {
         CVPixelBufferLockBaseAddress(pixels, [])
         defer { CVPixelBufferUnlockBaseAddress(pixels, []) }
         let width = CVPixelBufferGetWidth(pixels)
@@ -270,11 +311,25 @@ enum Drawing {
             }
 
             // Video pixels are about 2.5 times finer than iPhone screen points, so lines are wider here.
+            let usableCourt = court.flatMap { $0.isValid ? $0 : nil }
+            if let usableCourt {
+                context.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.5))
+                context.setLineWidth(5)
+                context.addLines(between: usableCourt.imageCorners.map(point))
+                context.closePath()
+                context.strokePath()
+            }
+
             context.setLineWidth(22)
             for mark in result.frame.players {
-                let ring = HaloStyle.ring(center: point(mark.center), playerHeight: mark.size * size.height, minimumWidth: 48)
                 context.setStrokeColor(mark.isHeld ? CGColor(red: 1, green: 0.55, blue: 0, alpha: 1) : CGColor(red: 0, green: 0.85, blue: 1, alpha: 1))
-                context.strokeEllipse(in: ring)
+                if let usableCourt, let ring = usableCourt.floorRing(aroundImagePoint: mark.center, diameter: HaloStyle.floorDiameter) {
+                    context.addLines(between: ring.map(point))
+                    context.closePath()
+                    context.strokePath()
+                } else {
+                    context.strokeEllipse(in: HaloStyle.ring(center: point(mark.center), playerHeight: mark.size * size.height, minimumWidth: 48))
+                }
             }
 
             context.setFillColor(CGColor(red: 1, green: 0, blue: 1, alpha: 1))
