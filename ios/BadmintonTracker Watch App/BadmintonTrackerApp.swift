@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct BadmintonTracker_Watch_AppApp: App {
+    @State private var link = WatchSession()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(link)
+                .task { link.activate() }
         }
     }
 }

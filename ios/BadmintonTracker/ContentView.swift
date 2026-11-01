@@ -3,9 +3,10 @@ import SwiftData
 import SwiftUI
 
 /// Shows match setup until a match starts, then the scoring screen.
-/// Every change is saved straight away, and an unfinished match reopens on launch.
+/// Every change is saved straight away and sent to the Watch, and an unfinished match reopens on launch.
 struct ContentView: View {
     @Environment(\.modelContext) private var context
+    @Environment(WatchSyncService.self) private var watchSync
     @State private var scoring: ScoringViewModel?
     @State private var record: MatchRecord?
     @State private var checkedForUnfinished = false
@@ -34,13 +35,16 @@ struct ContentView: View {
 
     private func open(_ model: ScoringViewModel, saving record: MatchRecord) {
         let context = context
+        let watchSync = watchSync
         model.onChange = { [weak model] in
             guard let model else { return }
             record.update(from: model)
             try? context.save()
+            watchSync.push()
         }
         self.record = record
         scoring = model
+        watchSync.model = model
     }
 
     private func closeMatch() {
@@ -51,6 +55,7 @@ struct ContentView: View {
         }
         scoring = nil
         record = nil
+        watchSync.model = nil
     }
 
     private func reopenUnfinishedMatch() {
@@ -69,4 +74,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .modelContainer(for: MatchRecord.self, inMemory: true)
+        .environment(WatchSyncService())
 }

@@ -87,6 +87,10 @@
         {
           "product-name": "ScoringKit",
           "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "package": "ScoringKit",
+          "product-name": "WatchLink",
+          "build-phase": { "build-phase": "frameworks" },
         },
       ],
       "build-settings": {
@@ -203,6 +207,10 @@
       "package-product-members": [
         {
           "product-name": "ScoringKit",
+          "build-phase": { "build-phase": "frameworks" },
+        }, {
+          "package": "ScoringKit",
+          "product-name": "WatchLink",
           "build-phase": { "build-phase": "frameworks" },
         },
       ],
