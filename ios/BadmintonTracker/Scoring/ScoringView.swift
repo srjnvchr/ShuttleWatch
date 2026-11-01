@@ -6,8 +6,27 @@ struct ScoringView: View {
     let model: ScoringViewModel
     let onEndMatch: () -> Void
     @State private var confirmingEnd = false
+    @State private var showingCamera = false
 
     var body: some View {
+        Group {
+            if showingCamera {
+                CameraView(model: model) { showingCamera = false }
+            } else {
+                scoring
+            }
+        }
+        .sheet(isPresented: Binding(get: { model.needsGameSetup }, set: { _ in })) {
+            GameSetupSheet(model: model, onEndMatch: onEndMatch)
+        }
+        .confirmationDialog("End this match?", isPresented: $confirmingEnd, titleVisibility: .visible) {
+            Button("End match", role: .destructive, action: onEndMatch)
+        } message: {
+            Text("The score is not saved yet.")
+        }
+    }
+
+    private var scoring: some View {
         VStack(spacing: 0) {
             sideButton(.a)
             centerBar
@@ -18,14 +37,6 @@ struct ScoringView: View {
             if let winner = model.state.winner {
                 matchOver(winner: winner)
             }
-        }
-        .sheet(isPresented: Binding(get: { model.needsGameSetup }, set: { _ in })) {
-            GameSetupSheet(model: model, onEndMatch: onEndMatch)
-        }
-        .confirmationDialog("End this match?", isPresented: $confirmingEnd, titleVisibility: .visible) {
-            Button("End match", role: .destructive, action: onEndMatch)
-        } message: {
-            Text("The score is not saved yet.")
         }
     }
 
@@ -75,6 +86,8 @@ struct ScoringView: View {
                 Text(model.gameLabel)
                     .font(.subheadline.weight(.medium))
                 Spacer()
+                Button("Camera", systemImage: "video") { showingCamera = true }
+                    .labelStyle(.iconOnly)
                 Button("Undo", systemImage: "arrow.uturn.backward") { model.undo() }
                     .disabled(!model.canUndo)
                 Menu {
@@ -111,6 +124,8 @@ struct ScoringView: View {
                 .font(.title2.monospacedDigit())
             HStack {
                 Button("Undo", systemImage: "arrow.uturn.backward") { model.undo() }
+                    .buttonStyle(.bordered)
+                Button("Camera", systemImage: "video") { showingCamera = true }
                     .buttonStyle(.bordered)
                 Button("New match", action: onEndMatch)
                     .buttonStyle(.borderedProminent)
