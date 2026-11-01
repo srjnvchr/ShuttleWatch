@@ -108,6 +108,7 @@ Priority: **Must** = needed for that phase to be useful. **Should** = core to au
 | FR-26 | Write a video with the tracking overlay drawn on recorded footage, to check tracking quality by eye. | Should | 0 |
 | FR-27 | Optional live tracking overlay on the camera preview, for setup and debugging. | Should | 3 |
 | FR-28 | Tracking overlay on replays and highlight clips. | Could | 5 |
+| FR-29 | Camera view: a button on the scoring screen switches to the live back camera preview with each side's score on top, and a button there switches back. View only, nothing is recorded. Follows the phone's orientation. | Should | 1 |
 
 ### 6.1 Scoring rules
 
@@ -182,6 +183,7 @@ The exit criteria numbers below are proposed starting targets. Revisit them afte
 
 - `ScoringKit` with full rules and tests.
 - iPhone app, Watch app, and Live Activity.
+- Camera view with the live score (FR-29), to frame the court and check the view from the tripod.
 - Match history and Watch workout session.
 - Every manual point becomes a ground-truth label for later training.
 
