@@ -45,15 +45,18 @@ struct CameraView: View {
     }
 
     private var bottomButtons: some View {
-        @Bindable var capture = capture
+        let tracking = capture.isTrackingEnabled
         return VStack(spacing: 8) {
             HStack {
-                Toggle(isOn: $capture.isTrackingEnabled) {
-                    Label("Tracking", systemImage: "scope")
+                // Solid white when on, solid gray when off, so the state reads at a glance.
+                Button("Tracking", systemImage: "scope") {
+                    capture.isTrackingEnabled.toggle()
                 }
-                .toggleStyle(.button)
-                .buttonStyle(.bordered)
-                .tint(.white)
+                .buttonStyle(.borderedProminent)
+                .tint(tracking ? .white : .gray.opacity(0.6))
+                .foregroundStyle(tracking ? .black : .white.opacity(0.8))
+                .accessibilityValue(tracking ? "On" : "Off")
+                .accessibilityAddTraits(tracking ? .isSelected : [])
                 Button(capture.calibration == nil ? "Calibrate" : "Recalibrate", systemImage: "square.dashed") {
                     isCalibrating = true
                 }
